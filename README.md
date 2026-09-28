@@ -4,6 +4,8 @@ Pick your tech stack visually and generate a ready-to-paste prompt for an AI cod
 
 Everything lives in a single `index.html` file, so there is nothing to install and nothing to build.
 
+**Live demo:** https://kasamajay.github.io/prompt-generator-app/
+
 ## Features
 
 - **Guided stack questions**: system type (Web / Desktop), language, backend and frontend framework (web) or desktop framework (desktop), and database.
