@@ -8,7 +8,16 @@ Guidance for Claude Code when working in this repository.
 
 - Vanilla HTML, CSS and JS. No framework, no build step, no package.json, no tests.
 - The only external dependency is the Iconify CDN script (`code.iconify.design/3/3.1.0`) for `logos:*`, `ph:*` and `simple-icons:*` icons.
-- Git repo: https://github.com/kasamajay/prompt-generator-app. Pushing to `main` redeploys GitHub Pages at https://kasamajay.github.io/prompt-generator-app/.
+- Git repo: https://github.com/kasamajay/prompt-generator-app. `main` is live: every merge into it redeploys GitHub Pages at https://kasamajay.github.io/prompt-generator-app/.
+
+## Git workflow
+
+`main` is **branch-protected**: changes must arrive through a pull request (0 approvals required), the rule applies to admins, and force-pushes and branch deletion are blocked. Never commit or push directly to `main`.
+
+1. Branch from an up-to-date `main`: `git checkout main && git pull && git checkout -b <type>/<short-name>` (types: `feat/`, `fix/`, `docs/`, `chore/`).
+2. Commit on the branch, then `git push -u origin <branch>`.
+3. Open a PR into `main` with `gh pr create --base main` and a summary plus test notes, then share the PR link.
+4. Leave merging to the repo owner unless they ask you to merge (`gh pr merge <n> --squash --delete-branch`). The site updates about a minute after the merge; hard-refresh (Ctrl+F5) to see it.
 
 ## Running / verifying
 
