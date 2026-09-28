@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibe Stack Builder</title>
+<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+<style>
+/* ─── TOKENS ─────────────────────────────────────── */
+:root {
+  --bg:      #07080e;
+  --bg-1:    #0d0f18;
+  --bg-2:    #131621;
+  --bg-3:    #181b28;
+  --bg-4:    #1d2133;
+  --bdr:     #242738;
+  --bdr-hi:  #343857;
+  --text:    #eaecf4;
+  --dim:     #8890aa;
+  --faint:   #4e536a;
+  --purple:  #8b5cf6;
+  --p-lo:    rgba(139,92,246,.16);
+  --p-glow:  rgba(139,92,246,.5);
+  --cyan:    #22d3ee;
+  --c-lo:    rgba(34,211,238,.13);
+  --green:   #10b981;
+  --g-lo:    rgba(16,185,129,.16);
+  --red:     #ef4444;
+  --r:       14px;
+  --rsm:     10px;
+  --rxs:     7px;
+  --sh:      0 20px 60px -20px rgba(0,0,0,.75);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+body{
+  background:
+    radial-gradient(ellipse 1400px 700px at -5% -10%,rgba(139,92,246,.20),transparent 58%),
+    radial-gradient(ellipse 900px 600px at 108%  5%,rgba(34,211,238,.15),transparent 55%),
+    radial-gradient(ellipse 600px 400px at 55% 105%,rgba(236,72,153,.09),transparent 60%),
+    var(--bg);
+  padding: 0 0 80px;
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg-1);}
+::-webkit-scrollbar-thumb{background:var(--bdr-hi);border-radius:3px;}
+
+/* ─── TOP NAV ────────────────────────────────────── */
+.top-nav{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:16px 28px;border-bottom:1px solid var(--bdr);
+  background:rgba(7,8,14,.7);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:12px;flex:1;min-width:200px;}
+.brand-mark{
+  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  box-shadow:0 0 0 1px rgba(255,255,255,.1) inset,0 6px 24px -6px var(--p-glow);
+  animation:bmPulse 4s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes bmPulse{0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.1) inset,0 6px 24px -6px var(--p-glow);}
+  50%{box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 8px 32px -4px var(--p-glow),0 0 60px -20px var(--cyan);}}
+.brand-name{
+  font-size:18px;font-weight:800;letter-spacing:-.03em;
+  background:linear-gradient(90deg,#fff 20%,var(--purple) 65%,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.brand-sub{font-size:12px;color:var(--dim);margin-top:2px;}
+
+.tab-group{display:flex;gap:4px;background:var(--bg-1);border:1px solid var(--bdr);
+  border-radius:var(--rsm);padding:3px;}
+.tab-btn{
+  display:flex;align-items:center;gap:7px;padding:8px 16px;
+  border-radius:8px;border:none;background:transparent;
+  color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;
+}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{background:var(--bg-3);color:var(--text);border:1px solid var(--bdr-hi);}
+.tab-btn .iconify{font-size:16px;}
+
+.reset-btn{
+  display:flex;align-items:center;gap:6px;
+  background:transparent;color:var(--dim);border:1px solid var(--bdr);
+  padding:8px 14px;border-radius:var(--rsm);cursor:pointer;font-size:12px;font-weight:600;
+  transition:.15s;flex-shrink:0;
+}
+.reset-btn:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.06);}
+
+/* ─── VIEWS ──────────────────────────────────────── */
+.view{padding:24px 28px;}
+.view[hidden]{display:none;}
+
+/* ─── DESCRIPTION ────────────────────────────────── */
+.description-card{
+  position:relative;overflow:hidden;
+  background:linear-gradient(160deg,var(--bg-2),var(--bg-1));
+  border:1px solid var(--bdr);border-radius:var(--r);
+  padding:16px 20px;margin-bottom:20px;box-shadow:var(--sh);
+}
+.description-card::before{
+  content:"";position:absolute;inset:0;border-radius:var(--r);
+  background:linear-gradient(135deg,var(--p-lo),transparent 50%);pointer-events:none;
+}
+.description-card label{
+  display:flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:700;color:var(--purple);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px;
+}
+.description-card textarea{
+  width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bdr);
+  border-radius:var(--rsm);color:var(--text);padding:11px 14px;
+  font-size:14px;font-family:inherit;resize:vertical;min-height:64px;line-height:1.6;transition:.2s;
+}
+.description-card textarea::placeholder{color:var(--faint);}
+.description-card textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--p-lo);}
+
+/* ─── LAYOUT GRID ────────────────────────────────── */
+.layout{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;}
+@media(max-width:1040px){.layout{grid-template-columns:1fr;}}
+
+/* ─── PANEL ──────────────────────────────────────── */
+.panel{
+  background:linear-gradient(170deg,var(--bg-2),var(--bg-1));
+  border:1px solid var(--bdr);border-radius:var(--r);box-shadow:var(--sh);overflow:visible;
+}
+.panel-header{
+  padding:13px 18px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(90deg,var(--bg-3),var(--bg-2));border-radius:var(--r) var(--r) 0 0;
+}
+.panel-header h2{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  display:flex;align-items:center;gap:7px;
+}
+.dot{width:7px;height:7px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  box-shadow:0 0 7px var(--p-glow);animation:dotPulse 2s ease-in-out infinite;}
+@keyframes dotPulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.panel-header small{color:var(--faint);font-size:11px;}
+
+/* ─── PROGRESS ───────────────────────────────────── */
+.progress-wrap{
+  padding:9px 14px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:10px;
+}
+.progress-bar{flex:1;height:3px;background:var(--bg-1);border-radius:2px;overflow:hidden;}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));
+  border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.progress-label{font-size:11px;color:var(--dim);white-space:nowrap;}
+
+/* ─── QUESTIONS ──────────────────────────────────── */
+.questions{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.question{
+  border-radius:var(--rsm);border:1px solid var(--bdr);
+  background:var(--bg-3);cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s;
+}
+.question:hover:not(.active){border-color:var(--bdr-hi);background:var(--bg-4);}
+.question.active{
+  border-color:var(--purple);
+  background:linear-gradient(170deg,rgba(139,92,246,.09),var(--bg-3));
+  box-shadow:0 0 0 1px var(--p-lo) inset,0 4px 18px -8px var(--p-glow);
+}
+.question.done{border-color:rgba(16,185,129,.45);background:linear-gradient(170deg,var(--g-lo),var(--bg-3));}
+.question.active.done{border-color:var(--purple);background:linear-gradient(170deg,rgba(139,92,246,.09),var(--bg-3));}
+
+.q-header{padding:10px 13px;display:flex;align-items:center;gap:9px;}
+.q-num{
+  width:24px;height:24px;border-radius:7px;display:grid;place-items:center;
+  font-size:11px;font-weight:800;flex-shrink:0;
+  background:var(--bg-1);border:1px solid var(--bdr-hi);color:var(--dim);transition:.18s;
+}
+.question.active .q-num{background:linear-gradient(135deg,var(--purple),#7c3aed);border-color:transparent;color:#fff;}
+.question.done:not(.active) .q-num{background:linear-gradient(135deg,var(--green),#059669);border-color:transparent;color:#fff;}
+.q-title{font-size:13px;font-weight:600;flex:1;line-height:1.2;}
+.q-badge{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;}
+.q-badge.req{color:var(--faint);border-color:var(--bdr);background:var(--bg-1);}
+.q-badge.opt{color:var(--cyan);border-color:rgba(34,211,238,.28);background:var(--c-lo);}
+.q-badge.done{color:var(--green);border-color:rgba(16,185,129,.3);background:var(--g-lo);}
+.q-body{padding:0 13px 11px;}
+
+/* ─── TYPE CARDS ─────────────────────────────────── */
+.type-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.type-card{
+  background:var(--bg-1);border:1px solid var(--bdr);border-radius:var(--rsm);
+  padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:.18s;
+}
+.type-card:hover{border-color:var(--bdr-hi);}
+.type-card.selected{border-color:var(--purple);background:linear-gradient(135deg,var(--p-lo),var(--bg-2));}
+.type-icon{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:20px;
+  background:var(--bg-3);border:1px solid var(--bdr);flex-shrink:0;transition:.18s;
+}
+.type-card.selected .type-icon{background:var(--p-lo);border-color:var(--purple);}
+.type-card-text strong{display:block;font-size:13px;font-weight:600;}
+.type-card-text span{font-size:11px;color:var(--dim);margin-top:2px;display:block;line-height:1.3;}
+
+/* ─── DROP ZONES ─────────────────────────────────── */
+.drop-zone{
+  min-height:68px;border:1.5px dashed var(--bdr-hi);border-radius:var(--rsm);
+  padding:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--faint);font-size:12px;transition:.18s;background:rgba(0,0,0,.18);
+}
+.drop-zone .dz-hint{display:flex;align-items:center;gap:6px;}
+.drop-zone .dz-hint .iconify{font-size:16px;opacity:.35;}
+.drop-zone.drag-over{
+  border-color:var(--cyan);border-style:solid;background:var(--c-lo);
+  color:var(--text);box-shadow:0 0 18px -8px var(--cyan);
+}
+.drop-zone.filled{border-style:solid;border-color:var(--bdr);justify-content:flex-start;background:transparent;}
+
+/* ─── CHIP ───────────────────────────────────────── */
+.chip{
+  display:inline-flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,rgba(139,92,246,.13),rgba(34,211,238,.07));
+  border:1px solid var(--purple);padding:7px 10px 7px 8px;border-radius:var(--rxs);
+  font-size:13px;max-width:100%;box-shadow:0 0 10px -5px var(--p-glow);
+}
+.chip .iconify{font-size:22px;flex-shrink:0;}
+.chip-name{font-weight:600;}
+.chip-remove{cursor:pointer;color:var(--faint);border:none;background:transparent;
+  font-size:18px;padding:0 2px;line-height:1;transition:.15s;}
+.chip-remove:hover{color:var(--red);}
+
+/* ─── PALETTE ────────────────────────────────────── */
+.palette-tabs{display:flex;gap:3px;padding:9px 10px 0;flex-wrap:wrap;}
+.palette-tab{
+  padding:6px 10px;font-size:11px;font-weight:600;
+  background:transparent;color:var(--faint);border:1px solid transparent;
+  border-radius:var(--rxs);cursor:pointer;transition:.13s;letter-spacing:.02em;
+}
+.palette-tab:hover{color:var(--text);background:var(--bg-4);}
+.palette-tab.active{color:var(--purple);background:var(--bg-4);border-color:var(--purple);}
+.palette-filter-note{
+  padding:7px 13px 0;color:var(--faint);font-size:11px;
+  display:flex;align-items:center;gap:5px;min-height:28px;
+}
+.palette-filter-note .iconify{color:var(--cyan);font-size:13px;}
+.palette-grid{
+  padding:9px 11px 16px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;
+}
+
+/* ─── TECH CARDS ─────────────────────────────────── */
+.tech-card{
+  background:var(--bg-3);border:1px solid var(--bdr);border-radius:var(--rsm);
+  padding:13px 7px 11px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  cursor:grab;transition:transform .16s,box-shadow .16s,border-color .16s,background .16s;
+  position:relative;user-select:none;
+}
+.tech-card::after{
+  content:"";position:absolute;inset:0;border-radius:var(--rsm);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);pointer-events:none;
+}
+.tech-card:hover{
+  border-color:var(--purple);transform:translateY(-3px);background:var(--bg-4);
+  box-shadow:0 8px 22px -8px var(--p-glow),0 0 0 1px var(--p-lo) inset;
+}
+.tech-card:active{cursor:grabbing;transform:scale(.95);}
+.tech-card.dragging{opacity:.32;transform:scale(.94);}
+.tech-card .iconify{font-size:32px;}
+.tech-card-name{font-size:11px;font-weight:600;text-align:center;line-height:1.25;color:var(--dim);}
+.tech-card:hover .tech-card-name{color:var(--text);}
+.fs-pill{
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;
+  background:var(--c-lo);color:var(--cyan);border:1px solid rgba(34,211,238,.25);
+  letter-spacing:.03em;
+}
+
+/* ─── FLOATING TOOLTIP ───────────────────────────── */
+.float-tip{
+  position:fixed;z-index:999;pointer-events:none;
+  background:#06070c;border:1px solid var(--bdr-hi);
+  box-shadow:0 12px 40px -8px rgba(0,0,0,.9),0 0 0 1px rgba(139,92,246,.15);
+  color:var(--text);padding:9px 13px;border-radius:9px;
+  font-size:12px;line-height:1.5;max-width:230px;
+  opacity:0;transition:opacity .15s;
+}
+.float-tip.visible{opacity:1;}
+
+/* ─── EMPTY STATE ────────────────────────────────── */
+.empty-state{
+  grid-column:1/-1;padding:36px 20px;text-align:center;
+  color:var(--faint);font-size:12px;line-height:1.7;
+}
+.empty-state .iconify{font-size:28px;display:block;margin:0 auto 8px;opacity:.25;}
+
+/* ─── PROMPT ─────────────────────────────────────── */
+.prompt-section{margin-top:18px;border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;box-shadow:var(--sh);}
+.prompt-topbar{
+  background:linear-gradient(90deg,var(--bg-3),var(--bg-2));border-bottom:1px solid var(--bdr);
+  padding:11px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.prompt-title{display:flex;align-items:center;gap:10px;}
+.prompt-title h2{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(90deg,var(--purple),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.traffic-lights{display:flex;gap:5px;align-items:center;}
+.tl{width:11px;height:11px;border-radius:50%;}
+.tl-r{background:#ff5f57;}.tl-y{background:#febc2e;}.tl-g{background:#28c840;}
+.prompt-actions{display:flex;gap:7px;}
+
+/* ─── PROMPT MODE TOGGLE ─────────────────────────── */
+.prompt-mode-bar{
+  background:linear-gradient(90deg,var(--bg-2),var(--bg-1));
+  border-bottom:1px solid var(--bdr);
+  padding:10px 18px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.prompt-mode-label{
+  font-size:11px;font-weight:700;color:var(--faint);
+  letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;
+}
+.prompt-mode-toggle{
+  display:flex;gap:3px;background:var(--bg-1);
+  border:1px solid var(--bdr);border-radius:var(--rsm);padding:3px;
+}
+.mode-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:7px;border:none;
+  background:transparent;color:var(--dim);
+  font-size:12px;font-weight:600;cursor:pointer;transition:.15s;
+  white-space:nowrap;
+}
+.mode-btn .iconify{font-size:15px;}
+.mode-btn:hover{color:var(--text);}
+.mode-btn.active-plan{
+  background:linear-gradient(135deg,rgba(34,211,238,.15),rgba(34,211,238,.07));
+  color:var(--cyan);border:1px solid rgba(34,211,238,.35);
+}
+.mode-btn.active-direct{
+  background:linear-gradient(135deg,var(--p-lo),rgba(139,92,246,.07));
+  color:var(--purple);border:1px solid rgba(139,92,246,.4);
+}
+.mode-desc{font-size:11px;color:var(--faint);line-height:1.4;}
+.btn{
+  background:var(--bg-4);border:1px solid var(--bdr-hi);color:var(--dim);
+  padding:7px 13px;border-radius:var(--rxs);font-size:12px;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.14s;
+}
+.btn:hover{color:var(--text);border-color:var(--dim);}
+.btn .iconify{font-size:14px;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--purple),#6d28d9);border-color:transparent;color:#fff;
+  box-shadow:0 4px 14px -5px var(--p-glow);
+}
+.btn-primary:hover{background:linear-gradient(135deg,#9d72ff,#7c3aed);color:#fff;border-color:transparent;}
+.prompt-output{
+  width:100%;min-height:270px;background:#040509;border:none;
+  color:#b5bdd2;padding:17px 20px;
+  font-family:"JetBrains Mono","Fira Code","SF Mono",Consolas,monospace;
+  font-size:12.5px;line-height:1.7;resize:vertical;display:block;
+}
+.prompt-output:focus{outline:none;}
+
+/* ─── TOAST ──────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:var(--bg-3);border:1px solid var(--green);color:var(--text);
+  padding:9px 18px;border-radius:var(--rsm);font-size:13px;font-weight:500;
+  opacity:0;transition:.2s;pointer-events:none;display:flex;align-items:center;gap:7px;z-index:200;
+  box-shadow:0 8px 28px -8px rgba(0,0,0,.7);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast .iconify{font-size:15px;color:var(--green);}
+
+/* ─────────────────────────────────────────────────
+   TECH TREE VIEW
+───────────────────────────────────────────────── */
+.tree-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+}
+.tree-legend{display:flex;align-items:center;gap:16px;font-size:12px;font-weight:500;color:var(--dim);}
+.legend-dot{
+  display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;
+}
+.legend-dot.web{background:var(--purple);box-shadow:0 0 6px var(--p-glow);}
+.legend-dot.desktop{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,.5);}
+.tree-hint{font-size:11px;color:var(--faint);}
+
+.tree-outer{
+  border:1px solid var(--bdr);border-radius:var(--r);
+  background:var(--bg-1);box-shadow:var(--sh);
+  overflow:auto;max-height:72vh;
+  /* subtle grid pattern */
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size:32px 32px;
+  background-color:var(--bg-1);
+}
+.tree-inner{position:relative;} /* size set by JS */
+
+/* SVG edges */
+.tree-edge{transition:opacity .2s,stroke-width .2s;}
+.tree-edge.edge-dim{opacity:.05;}
+.tree-edge.edge-hi{opacity:.9;stroke-width:2.5px;}
+
+/* Tree node cards */
+.tree-node-el{
+  position:absolute;display:flex;align-items:center;gap:8px;
+  border-radius:var(--rsm);border:1px solid var(--bdr);
+  background:var(--bg-2);padding:0 11px;
+  font-size:12px;font-weight:600;cursor:default;
+  transition:opacity .18s,border-color .18s,background .18s,box-shadow .18s;
+  white-space:nowrap;overflow:hidden;
+}
+.tree-node-el.kind-root{
+  border-color:var(--purple);
+  background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(34,211,238,.1));
+  font-size:14px;font-weight:800;
+  box-shadow:0 0 20px -8px var(--p-glow);
+}
+.tree-node-el.kind-type{
+  font-size:13px;font-weight:700;
+}
+.tree-node-el.branch-web.kind-type{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.08);}
+.tree-node-el.branch-desktop.kind-type{border-color:rgba(34,211,238,.45);background:rgba(34,211,238,.07);}
+.tree-node-el.kind-framework{background:var(--bg-3);font-size:11.5px;}
+.tree-node-el.dimmed{opacity:.1;}
+.tree-node-el.highlighted{
+  border-color:var(--purple);
+  box-shadow:0 0 14px -4px var(--p-glow),0 0 0 1px var(--p-lo) inset;
+}
+.tree-node-el.branch-desktop.highlighted{
+  border-color:var(--cyan);
+  box-shadow:0 0 14px -4px rgba(34,211,238,.5),0 0 0 1px var(--c-lo) inset;
+}
+.tree-node-el .iconify{flex-shrink:0;}
+.tree-node-el .tn-name{flex:1;overflow:hidden;text-overflow:ellipsis;}
+
+/* Database section */
+.tree-db-section{margin-top:20px;}
+.tree-db-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:12px;
+}
+.tree-db-grid{
+  display:flex;gap:9px;flex-wrap:wrap;
+}
+.tree-db-card{
+  background:var(--bg-2);border:1px solid var(--bdr);border-radius:var(--rsm);
+  padding:12px 14px;display:flex;align-items:center;gap:9px;
+  font-size:12px;font-weight:600;cursor:default;transition:.16s;
+}
+.tree-db-card:hover{border-color:var(--bdr-hi);background:var(--bg-3);}
+.tree-db-card .iconify{font-size:22px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- Floating tooltip (global, body-level) -->
+<div id="floatTip" class="float-tip"></div>
+
+<nav class="top-nav">
+  <div class="brand">
+    <div class="brand-mark">
+      <span class="iconify" data-icon="ph:stack-bold" style="color:#fff"></span>
+    </div>
+    <div>
+      <div class="brand-name">Vibe Stack Builder</div>
+      <div class="brand-sub">Pick your tech stack · Generate AI coding prompts</div>
+    </div>
+  </div>
+
+  <div class="tab-group">
+    <button class="tab-btn active" data-view="builder">
+      <span class="iconify" data-icon="ph:wrench-bold"></span> Builder
+    </button>
+    <button class="tab-btn" data-view="tree">
+      <span class="iconify" data-icon="ph:tree-structure-bold"></span> Tech Tree
+    </button>
+  </div>
+
+  <button class="reset-btn" id="resetBtn">
+    <span class="iconify" data-icon="ph:arrow-counter-clockwise-bold"></span> Reset
+  </button>
+</nav>
+
+<!-- ═══ BUILDER VIEW ═══════════════════════════════ -->
+<div id="view-builder" class="view">
+  <div class="description-card">
+    <label for="sysDescription">
+      <span class="iconify" data-icon="ph:pencil-line-bold"></span>
+      What are you building?
+    </label>
+    <textarea id="sysDescription"
+      placeholder="Example: A task management app where teams can create projects, assign tasks, track progress with kanban boards, and get email notifications on deadlines."></textarea>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-header">
+        <h2><span class="dot"></span> Your Stack</h2>
+        <small>Click a question · assign technologies</small>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-label" id="progressLabel">0 / 0 done</div>
+      </div>
+      <div class="questions" id="questionsContainer"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2><span class="dot"></span> Technology Palette</h2>
+        <small>Hover for details · drag or click to assign</small>
+      </div>
+      <div class="palette-tabs" id="paletteTabs"></div>
+      <div class="palette-filter-note" id="paletteFilterNote"></div>
+      <div class="palette-grid" id="paletteGrid"></div>
+    </div>
+  </div>
+
+  <div class="prompt-section">
+    <div class="prompt-topbar">
+      <div class="prompt-title">
+        <div class="traffic-lights">
+          <div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div>
+        </div>
+        <h2>Generated Prompt</h2>
+      </div>
+      <div class="prompt-actions">
+        <button class="btn" id="regenBtn">
+          <span class="iconify" data-icon="ph:arrows-clockwise-bold"></span> Regenerate
+        </button>
+        <button class="btn btn-primary" id="copyBtn">
+          <span class="iconify" data-icon="ph:copy-bold"></span> Copy prompt
+        </button>
+      </div>
+    </div>
+    <div class="prompt-mode-bar">
+      <span class="prompt-mode-label">Prompt mode</span>
+      <div class="prompt-mode-toggle">
+        <button class="mode-btn" id="modeDirectBtn" data-mode="direct">
+          <span class="iconify" data-icon="ph:rocket-launch-bold"></span> Build direct
+        </button>
+        <button class="mode-btn" id="modePlanBtn" data-mode="plan">
+          <span class="iconify" data-icon="ph:tree-structure-bold"></span> Plan first
+        </button>
+      </div>
+      <span class="mode-desc" id="modeDesc"></span>
+    </div>
+    <textarea class="prompt-output" id="promptOutput" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<!-- ═══ TECH TREE VIEW ═════════════════════════════ -->
+<div id="view-tree" class="view" hidden>
+  <div class="tree-topbar">
+    <div class="tree-legend">
+      <span><span class="legend-dot web"></span>Web stack</span>
+      <span><span class="legend-dot desktop"></span>Desktop stack</span>
+    </div>
+    <small class="tree-hint">Hover any node to highlight its connections</small>
+  </div>
+  <div class="tree-outer" id="treeOuter">
+    <div class="tree-inner" id="treeInner"></div>
+  </div>
+  <div class="tree-db-section">
+    <div class="tree-db-title">
+      <span class="iconify" data-icon="ph:database-bold"></span>
+      Databases — available to all stacks
+    </div>
+    <div class="tree-db-grid" id="treeDbGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="iconify" data-icon="ph:check-circle-bold"></span>
+  <span id="toastMsg">Done</span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   TECH DATA
+══════════════════════════════════════════════════ */
+const TECH_DATA = {
+  types: [
+    { id:"web",     name:"Web",     icon:"ph:globe-bold",   description:"Browser-based application accessible via URL." },
+    { id:"desktop", name:"Desktop", icon:"ph:desktop-bold", description:"Native app that runs on Windows / macOS / Linux." }
+  ],
+  languages: [
+    { id:"typescript", name:"TypeScript", icon:"logos:typescript-icon",  supports:["web","desktop"], description:"Strongly-typed JavaScript. Best for large, maintainable web and Electron/Tauri apps." },
+    { id:"javascript", name:"JavaScript", icon:"logos:javascript",       supports:["web","desktop"], description:"The language of the browser. Flexible and universal." },
+    { id:"python",     name:"Python",     icon:"logos:python",           supports:["web","desktop"], description:"Readable syntax, huge ecosystem. Great for APIs, data & scripting." },
+    { id:"java",       name:"Java",       icon:"logos:java",             supports:["web","desktop"], description:"Battle-tested, enterprise-grade, runs on the JVM." },
+    { id:"csharp",     name:"C#",         icon:"logos:c-sharp",          supports:["web","desktop"], description:"Microsoft's flagship language. Perfect for .NET and WPF/MAUI desktop apps." },
+    { id:"go",         name:"Go",         icon:"logos:go",               supports:["web"],           description:"Compiled, concurrent, fast. Excellent for APIs and microservices." },
+    { id:"rust",       name:"Rust",       icon:"logos:rust",             supports:["web","desktop"], description:"Memory-safe, blazing fast. Powers Tauri and modern systems." },
+    { id:"php",        name:"PHP",        icon:"logos:php",              supports:["web"],           description:"Powers most of the web. Great with Laravel." },
+    { id:"ruby",       name:"Ruby",       icon:"logos:ruby",             supports:["web"],           description:"Elegant, developer-friendly. Synonymous with Rails." },
+    { id:"cpp",        name:"C++",        icon:"logos:c-plusplus",       supports:["desktop"],       description:"High-performance native language. Used with Qt and game engines." },
+    { id:"kotlin",     name:"Kotlin",     icon:"logos:kotlin-icon",      supports:["web","desktop"], description:"Modern JVM language. Works with Spring and Compose Multiplatform." },
+    { id:"dart",       name:"Dart",       icon:"logos:dart",             supports:["desktop"],       description:"The language of Flutter. Great for cross-platform UIs." }
+  ],
+  backendFrameworks: [
+    { id:"express",   name:"Express.js",     icon:"logos:express",        languages:["javascript","typescript"], description:"Minimal, unopinionated Node.js web framework. Flexible for any REST API." },
+    { id:"nestjs",    name:"NestJS",         icon:"logos:nestjs",         languages:["typescript","javascript"], description:"Opinionated, Angular-inspired Node.js framework with DI, modules and decorators." },
+    { id:"fastify",   name:"Fastify",        icon:"simple-icons:fastify", languages:["typescript","javascript"], description:"High-performance Node.js framework. Very low overhead, schema-based." },
+    { id:"hono",      name:"Hono",           icon:"logos:hono",           languages:["typescript","javascript"], description:"Ultrafast edge-first framework. Runs on Cloudflare Workers, Bun, Deno, Node." },
+    { id:"nextjs",    name:"Next.js",        icon:"logos:nextjs-icon",    languages:["typescript","javascript"], description:"Full-stack React framework. Route handlers + server actions.", fullstack:true },
+    { id:"nuxt",      name:"Nuxt",           icon:"logos:nuxt-icon",      languages:["typescript","javascript"], description:"Full-stack Vue framework. Nitro server engine, great DX.", fullstack:true },
+    { id:"sveltekit", name:"SvelteKit",      icon:"logos:svelte-icon",    languages:["typescript","javascript"], description:"Full-stack Svelte with file-based routing and server endpoints.", fullstack:true },
+    { id:"remix",     name:"Remix",          icon:"logos:remix-icon",     languages:["typescript","javascript"], description:"React framework focused on web standards, loaders and actions.", fullstack:true },
+    { id:"fastapi",   name:"FastAPI",        icon:"logos:fastapi-icon",   languages:["python"],                  description:"Modern async Python framework with automatic OpenAPI docs and Pydantic." },
+    { id:"django",    name:"Django",         icon:"logos:django-icon",    languages:["python"],                  description:"Batteries-included Python framework. ORM, admin, auth out of the box.", fullstack:true },
+    { id:"flask",     name:"Flask",          icon:"logos:flask",          languages:["python"],                  description:"Micro web framework for Python. Simple, flexible, extensible." },
+    { id:"spring",    name:"Spring Boot",    icon:"logos:spring-icon",    languages:["java","kotlin"],           description:"Production-ready Java/Kotlin framework with autoconfiguration." },
+    { id:"dotnet",    name:".NET / ASP.NET", icon:"logos:dotnet",         languages:["csharp"],                  description:"Microsoft's cross-platform framework for fast, scalable APIs." },
+    { id:"gin",       name:"Gin",            icon:"logos:gin",            languages:["go"],                      description:"Fast Go HTTP framework with a martini-like API." },
+    { id:"fiber",     name:"Fiber",          icon:"logos:fiber",          languages:["go"],                      description:"Express-inspired Go web framework built on fasthttp." },
+    { id:"axum",      name:"Axum",           icon:"simple-icons:rust",    languages:["rust"],                    description:"Ergonomic, modular Rust framework built on Tokio and Tower." },
+    { id:"laravel",   name:"Laravel",        icon:"logos:laravel",        languages:["php"],                     description:"Elegant PHP framework with Eloquent ORM, queues and Blade templating.", fullstack:true },
+    { id:"rails",     name:"Ruby on Rails",  icon:"logos:rails",          languages:["ruby"],                    description:"Convention-over-configuration full-stack Ruby framework.", fullstack:true }
+  ],
+  frontendFrameworks: [
+    { id:"react",     name:"React",     icon:"logos:react",         languages:["typescript","javascript"], description:"The most popular UI library. Component-based, massive ecosystem." },
+    { id:"vue",       name:"Vue",       icon:"logos:vue",           languages:["typescript","javascript"], description:"Progressive, approachable framework. Great reactivity system." },
+    { id:"angular",   name:"Angular",   icon:"logos:angular-icon",  languages:["typescript"],              description:"Opinionated, full-featured framework. RxJS, DI, CLI." },
+    { id:"svelte",    name:"Svelte",    icon:"logos:svelte-icon",   languages:["typescript","javascript"], description:"Compiler-based UI framework. Less runtime, smaller bundles." },
+    { id:"solid",     name:"SolidJS",   icon:"logos:solidjs-icon",  languages:["typescript","javascript"], description:"Fine-grained reactive UI with React-like syntax and great performance." },
+    { id:"nextjs",    name:"Next.js",   icon:"logos:nextjs-icon",   languages:["typescript","javascript"], description:"React-based fullstack framework. SSR, SSG, API routes.", fullstack:true },
+    { id:"nuxt",      name:"Nuxt",      icon:"logos:nuxt-icon",     languages:["typescript","javascript"], description:"Vue meta-framework with SSR/SSG and auto-imports.", fullstack:true },
+    { id:"sveltekit", name:"SvelteKit", icon:"logos:svelte-icon",   languages:["typescript","javascript"], description:"Full-stack Svelte with routing and server-side logic.", fullstack:true },
+    { id:"astro",     name:"Astro",     icon:"logos:astro-icon",    languages:["typescript","javascript"], description:"Content-focused framework with Islands architecture." },
+    { id:"htmx",      name:"HTMX",      icon:"simple-icons:htmx",   languages:["python","ruby","php","go","java","csharp","typescript","javascript"], description:"Server-rendered HTML over the wire. Pairs with any backend." }
+  ],
+  desktopFrameworks: [
+    { id:"electron",  name:"Electron",       icon:"logos:electron",       languages:["javascript","typescript"],        description:"Web tech (Chromium + Node) packaged as a desktop app. Used by VS Code, Slack, Discord." },
+    { id:"tauri",     name:"Tauri",          icon:"logos:tauri",          languages:["rust","typescript","javascript"],  description:"Lightweight alternative to Electron. Rust backend + web frontend, tiny binaries." },
+    { id:"maui",      name:".NET MAUI",      icon:"logos:dotnet",         languages:["csharp"],                         description:"Microsoft's cross-platform XAML UI for desktop & mobile." },
+    { id:"wpf",       name:"WPF",            icon:"logos:microsoft-icon", languages:["csharp"],                         description:"Windows-only XAML UI. Great for rich business apps." },
+    { id:"avalonia",  name:"Avalonia",       icon:"simple-icons:avalonia",languages:["csharp"],                         description:"Cross-platform XAML UI for .NET. Like WPF, but everywhere." },
+    { id:"qt",        name:"Qt",             icon:"logos:qt",             languages:["cpp","python"],                   description:"Mature C++/Python framework for native, cross-platform desktop apps." },
+    { id:"javafx",    name:"JavaFX",         icon:"logos:java",           languages:["java","kotlin"],                  description:"Modern Java UI framework, successor to Swing." },
+    { id:"flutter",   name:"Flutter",        icon:"logos:flutter",        languages:["dart"],                           description:"Google's cross-platform UI toolkit. Renders its own widgets via Skia." },
+    { id:"compose",   name:"Compose MP",     icon:"logos:kotlin-icon",    languages:["kotlin"],                         description:"Kotlin Multiplatform declarative UI for desktop and mobile." },
+    { id:"pywebview", name:"pywebview",      icon:"logos:python",         languages:["python"],                         description:"Python desktop apps with a native webview window — UI built in HTML/CSS/JS." },
+    { id:"pyqt",      name:"PyQt / PySide",  icon:"logos:qt",             languages:["python"],                         description:"Python bindings for Qt. Rich, mature native desktop UI." },
+    { id:"tkinter",   name:"Tkinter",        icon:"logos:python",         languages:["python"],                         description:"Built-in Python GUI toolkit. Simple, zero-dependency desktop apps." },
+    { id:"customtk",  name:"CustomTkinter",  icon:"logos:python",         languages:["python"],                         description:"Modern-looking themed widgets on top of Tkinter. Great for quick, pretty apps." }
+  ],
+  databases: [
+    { id:"postgres",    name:"PostgreSQL", icon:"logos:postgresql",                description:"Powerful open-source relational DB. JSONB, extensions, rock solid." },
+    { id:"mysql",       name:"MySQL",      icon:"logos:mysql-icon",                description:"Popular relational database. Fast reads, widely supported." },
+    { id:"sqlite",      name:"SQLite",     icon:"logos:sqlite",                    description:"Zero-config embedded database in a single file. Perfect for local/desktop." },
+    { id:"mongodb",     name:"MongoDB",    icon:"logos:mongodb-icon",              description:"Document NoSQL database. Flexible schemas, great for JSON-heavy apps." },
+    { id:"redis",       name:"Redis",      icon:"logos:redis",                     description:"In-memory key-value store. Cache, pub/sub, sessions, rate-limiting." },
+    { id:"neon",        name:"Neon",       icon:"simple-icons:neon",               description:"Serverless Postgres with branching. Great for edge and preview environments." },
+    { id:"supabase",    name:"Supabase",   icon:"logos:supabase-icon",             description:"Open-source Firebase alternative — Postgres, auth, storage and realtime." },
+    { id:"firestore",   name:"Firestore",  icon:"logos:firebase",                  description:"Google's NoSQL document DB with realtime sync and offline support." },
+    { id:"oracle",      name:"Oracle DB",  icon:"simple-icons:oracle",             description:"Enterprise-grade relational database. Common in large corporations." },
+    { id:"mssql",       name:"SQL Server", icon:"simple-icons:microsoftsqlserver",  description:"Microsoft's enterprise relational DB. Great with .NET." },
+    { id:"dynamodb",    name:"DynamoDB",   icon:"logos:aws-dynamodb",              description:"AWS managed NoSQL key-value store. Scales effortlessly." },
+    { id:"planetscale", name:"PlanetScale",icon:"logos:planetscale-icon",          description:"Serverless MySQL-compatible DB with branching and schema migrations." }
+  ]
+};
+
+/* ══════════════════════════════════════════════════
+   QUESTION DEFINITIONS
+══════════════════════════════════════════════════ */
+const QUESTION_DEFS = [
+  { id:"type",     title:"What type of system?",  kind:"type", required:true,  category:"types" },
+  { id:"language", title:"Which language?",        kind:"drop", required:true,  category:"languages" },
+  { id:"backend",  title:"Backend framework?",     kind:"drop", required:true,  category:"backendFrameworks",  showWhen:s=>s.type==="web" },
+  { id:"frontend", title:"Frontend framework?",    kind:"drop", required:true,  category:"frontendFrameworks", showWhen:s=>s.type==="web" },
+  { id:"desktop",  title:"Desktop framework?",     kind:"drop", required:true,  category:"desktopFrameworks",  showWhen:s=>s.type==="desktop" },
+  { id:"database", title:"Database?",              kind:"drop", required:true,  category:"databases" }
+];
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+const state = {
+  type:null, language:null, backend:null, frontend:null,
+  desktop:null, database:null, description:"", activeQuestion:"type",
+  promptMode:"direct"
+};
+
+/* ══════════════════════════════════════════════════
+   FLOATING TOOLTIP
+══════════════════════════════════════════════════ */
+const floatTip = document.getElementById("floatTip");
+function showTip(text, e){ floatTip.textContent = text; floatTip.classList.add("visible"); moveTip(e); }
+function moveTip(e){
+  const x = e.clientX + 16, y = e.clientY - 8;
+  const tw = 234, vw = window.innerWidth;
+  floatTip.style.left = (x + tw > vw ? x - tw - 32 : x) + "px";
+  floatTip.style.top  = y + "px";
+}
+function hideTip(){ floatTip.classList.remove("visible"); }
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+function visibleQuestions(){
+  const qs = QUESTION_DEFS.filter(q => !q.showWhen || q.showWhen(state));
+  qs.forEach((q,i) => q.num = i + 1);
+  return qs;
+}
+function findTech(cat, id){ return (TECH_DATA[cat]||[]).find(t=>t.id===id); }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function isDone(q){ return q.kind==="type" ? !!state.type : !!state[q.id]; }
+
+function filterItem(item, question){
+  if(question.category==="languages")
+    if(state.type && item.supports && !item.supports.includes(state.type)) return false;
+  if(["backendFrameworks","frontendFrameworks","desktopFrameworks"].includes(question.category))
+    if(state.language && item.languages && !item.languages.includes(state.language)) return false;
+  return true;
+}
+
+/* ══════════════════════════════════════════════════
+   BUILDER — RENDER
+══════════════════════════════════════════════════ */
+const qContainer    = document.getElementById("questionsContainer");
+const paletteTabs   = document.getElementById("paletteTabs");
+const paletteGrid   = document.getElementById("paletteGrid");
+const paletteFilter = document.getElementById("paletteFilterNote");
+const promptOutput  = document.getElementById("promptOutput");
+const sysDescInput  = document.getElementById("sysDescription");
+
+function updateProgress(){
+  const req = visibleQuestions().filter(q=>q.required);
+  const done = req.filter(isDone).length;
+  const pct  = req.length ? Math.round(done/req.length*100) : 0;
+  document.getElementById("progressFill").style.width = pct+"%";
+  document.getElementById("progressLabel").textContent = done+" / "+req.length+" done";
+}
+
+function renderQuestions(){
+  qContainer.innerHTML = "";
+  visibleQuestions().forEach(q => {
+    const done   = isDone(q);
+    const active = state.activeQuestion === q.id;
+    const el = document.createElement("div");
+    el.className = "question"+(active?" active":"")+(done?" done":"");
+
+    let badgeCls = q.required ? "req" : "opt";
+    let badgeTxt = q.required ? "required" : "optional";
+    if(done && !active){ badgeCls="done"; badgeTxt="✓ done"; }
+
+    const hdr = document.createElement("div");
+    hdr.className = "q-header";
+    hdr.innerHTML = `
+      <div class="q-num">${done && !active
+        ? `<span class="iconify" data-icon="ph:check-bold" style="font-size:11px"></span>`
+        : q.num}</div>
+      <div class="q-title">${q.title}</div>
+      <div class="q-badge ${badgeCls}">${badgeTxt}</div>`;
+    el.appendChild(hdr);
+
+    const body = document.createElement("div");
+    body.className = "q-body";
+    if(q.kind==="type") body.appendChild(renderTypeChoices());
+    else                body.appendChild(renderDropZone(q));
+    el.appendChild(body);
+
+    el.addEventListener("click", () => { state.activeQuestion = q.id; renderQuestions(); renderPalette(); });
+    qContainer.appendChild(el);
+  });
+  updateProgress();
+}
+
+function renderTypeChoices(){
+  const wrap = document.createElement("div");
+  wrap.className = "type-choices";
+  TECH_DATA.types.forEach(t => {
+    const card = document.createElement("div");
+    card.className = "type-card"+(state.type===t.id?" selected":"");
+    card.innerHTML = `
+      <div class="type-icon"><span class="iconify" data-icon="${t.icon}"></span></div>
+      <div class="type-card-text"><strong>${t.name}</strong><span>${t.description}</span></div>`;
+    card.addEventListener("click", e => {
+      e.stopPropagation();
+      state.type = t.id;
+      if(t.id==="web")     state.desktop = null;
+      if(t.id==="desktop"){ state.backend=null; state.frontend=null; }
+      state.activeQuestion = "language";
+      renderAll();
+    });
+    wrap.appendChild(card);
+  });
+  return wrap;
+}
+
+function renderDropZone(q){
+  const zone = document.createElement("div");
+  const sel  = state[q.id];
+  zone.className = "drop-zone"+(sel?" filled":"");
+
+  if(sel){
+    const item = findTech(q.category, sel);
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.innerHTML = `
+      <span class="iconify" data-icon="${item.icon}"></span>
+      <span class="chip-name">${item.name}</span>
+      <button class="chip-remove" title="Remove">×</button>`;
+    chip.querySelector(".chip-remove").addEventListener("click", e => {
+      e.stopPropagation(); state[q.id]=null; renderAll();
+    });
+    zone.appendChild(chip);
+  } else {
+    zone.innerHTML = `<div class="dz-hint">
+      <span class="iconify" data-icon="ph:hand-grabbing-bold"></span>
+      Drag or click a ${q.title.replace("?","").toLowerCase()} here</div>`;
+  }
+  zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+  zone.addEventListener("drop", e => {
+    e.preventDefault(); zone.classList.remove("drag-over");
+    const data = e.dataTransfer.getData("application/json");
+    if(!data) return;
+    const p = JSON.parse(data);
+    if(p.category !== q.category){ showToast("That tech doesn't fit here",false); return; }
+    state[q.id] = p.id;
+    renderAll();
+  });
+  return zone;
+}
+
+function renderPalette(){
+  paletteTabs.innerHTML = "";
+  const vqs    = visibleQuestions();
+  const active = vqs.find(q=>q.id===state.activeQuestion) || vqs[0];
+
+  vqs.filter(q=>q.kind==="drop").forEach(q => {
+    const done = isDone(q);
+    const tab  = document.createElement("button");
+    tab.className = "palette-tab"+(state.activeQuestion===q.id?" active":"");
+    tab.textContent = (done?"✓ ":"")+q.title.replace("?","");
+    tab.addEventListener("click", () => { state.activeQuestion=q.id; renderAll(); });
+    paletteTabs.appendChild(tab);
+  });
+
+  if(!active || active.kind==="type"){
+    paletteFilter.innerHTML = `<span class="iconify" data-icon="ph:info-bold"></span>
+      Pick <strong style="color:var(--text);margin:0 3px">Web</strong> or
+      <strong style="color:var(--text);margin:0 3px">Desktop</strong> on the left first.`;
+    paletteGrid.innerHTML = `<div class="empty-state">
+      <span class="iconify" data-icon="ph:cursor-click-bold"></span>
+      Select the system type first.</div>`;
+    return;
+  }
+
+  const all   = TECH_DATA[active.category] || [];
+  const items = all.filter(item => filterItem(item, active));
+
+  const filterParts = [];
+  if(active.category==="languages" && state.type)
+    filterParts.push(`type = <strong style="color:var(--text)">${state.type}</strong>`);
+  if(["backendFrameworks","frontendFrameworks","desktopFrameworks"].includes(active.category) && state.language)
+    filterParts.push(`language = <strong style="color:var(--text)">${findTech("languages",state.language).name}</strong>`);
+
+  paletteFilter.innerHTML = filterParts.length
+    ? `<span class="iconify" data-icon="ph:funnel-bold"></span> Filtered by ${filterParts.join(" · ")}`
+    : `<span class="iconify" data-icon="ph:hand-grabbing-bold"></span> Click or drag a card to assign it.`;
+
+  paletteGrid.innerHTML = "";
+  if(!items.length){
+    paletteGrid.innerHTML = `<div class="empty-state">
+      <span class="iconify" data-icon="ph:magnifying-glass-bold"></span>
+      No options match the current filters.<br>Try changing the language or system type.</div>`;
+    return;
+  }
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "tech-card";
+    card.draggable = true;
+    card.innerHTML = `
+      <span class="iconify" data-icon="${item.icon}"></span>
+      <div class="tech-card-name">${item.name}${item.fullstack
+        ? `<br><span class="fs-pill">fullstack</span>`:""}</div>`;
+
+    card.addEventListener("mouseenter", e => showTip(item.description, e));
+    card.addEventListener("mousemove",  moveTip);
+    card.addEventListener("mouseleave", hideTip);
+    card.addEventListener("dragstart",  e => {
+      card.classList.add("dragging");
+      e.dataTransfer.setData("application/json", JSON.stringify({id:item.id, category:active.category}));
+      e.dataTransfer.effectAllowed = "copy";
+    });
+    card.addEventListener("dragend",  () => card.classList.remove("dragging"));
+    card.addEventListener("click", () => { state[active.id]=item.id; renderAll(); });
+    paletteGrid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   PROMPT GENERATION
+══════════════════════════════════════════════════ */
+function buildStackLines(){
+  const L = [];
+  const add = (label,cat,id) => {
+    if(!id) return;
+    const t = findTech(cat,id);
+    if(t) L.push(`- **${label}:** ${t.name}`);
+  };
+  add("Language",           "languages",          state.language);
+  add("Backend framework",  "backendFrameworks",  state.backend);
+  add("Frontend framework", "frontendFrameworks", state.frontend);
+  add("Desktop framework",  "desktopFrameworks",  state.desktop);
+  add("Database",           "databases",          state.database);
+  if(!L.length) L.push("_No technologies selected yet._");
+  return L;
+}
+
+function generatePrompt(){
+  return state.promptMode === "plan" ? generatePlanPrompt() : generateDirectPrompt();
+}
+
+function generateDirectPrompt(){
+  const desc    = (state.description||"").trim();
+  const sysType = state.type ? capitalize(state.type) : "[system type]";
+  const L = [];
+
+  L.push(`# Build a ${sysType} application`);
+  L.push("");
+  L.push(`## What the system does`);
+  L.push(desc || "_Describe your system here — what it does, who it's for, main features._");
+  L.push("");
+  L.push(`## Tech stack`);
+  buildStackLines().forEach(s => L.push(s));
+
+  if(state.backend && state.frontend && state.backend === state.frontend){
+    const t = findTech("backendFrameworks", state.backend);
+    if(t){ L.push(""); L.push(`> **Note:** ${t.name} is used as a **fullstack** framework — handle both API and UI within the same project.`); }
+  }
+
+  L.push(""); L.push(`## Requirements`);
+  L.push(`- Follow idiomatic best practices for the chosen stack.`);
+  L.push(`- Produce a clean, well-structured project I can run locally.`);
+  L.push(`- Include setup instructions (install, env vars, run commands).`);
+  if(state.database) L.push(`- Provide database schema and migration/seed scripts.`);
+  L.push(`- Choose a sensible project structure for the stack — you decide the architecture.`);
+  L.push(`- Write small, focused files. Add comments only where intent is non-obvious.`);
+  L.push(`- Include a README with architecture overview and run instructions.`);
+
+  L.push(""); L.push(`## Deliverables`);
+  L.push(`1. Project scaffolding with all configuration files.`);
+  L.push(`2. Core features implemented end-to-end.`);
+  L.push(`3. Example data / seeds so the app is usable on first run.`);
+  L.push(`4. README with setup, run and deploy steps.`);
+
+  return L.join("\n");
+}
+
+function generatePlanPrompt(){
+  const desc    = (state.description||"").trim();
+  const sysType = state.type ? capitalize(state.type) : "[system type]";
+  const L = [];
+
+  L.push(`# Plan: ${sysType} application`);
+  L.push("");
+  L.push(`## What I want to build`);
+  L.push(desc || "_Describe your system here — what it does, who it's for, main features._");
+  L.push("");
+  L.push(`## Tech stack`);
+  buildStackLines().forEach(s => L.push(s));
+
+  if(state.backend && state.frontend && state.backend === state.frontend){
+    const t = findTech("backendFrameworks", state.backend);
+    if(t){ L.push(""); L.push(`> **Note:** ${t.name} is used as a **fullstack** framework.`); }
+  }
+
+  L.push("");
+  L.push(`## Your task — Plan only, do NOT write any code yet`);
+  L.push("");
+  L.push(`Before writing a single line of code, produce a thorough plan covering:`);
+  L.push("");
+  L.push(`### 1. Requirements analysis`);
+  L.push(`- Summarize in your own words what I want to build.`);
+  L.push(`- List any ambiguities, missing details, or assumptions you are making.`);
+  L.push(`- Call out any features that are out of scope or could be deferred.`);
+  L.push("");
+  L.push(`### 2. Architecture design`);
+  L.push(`- Describe the overall system structure (layers, services, modules).`);
+  L.push(`- Explain how the frontend, backend and database will communicate.`);
+  L.push(`- Identify key third-party libraries or tools you plan to use and why.`);
+  L.push("");
+  L.push(`### 3. Project structure`);
+  L.push(`- List every file and folder you plan to create, with a one-line description of each.`);
+  L.push(`- Use a tree-style format (e.g. \`src/routes/auth.ts — JWT auth routes\`).`);
+  L.push("");
+  L.push(`### 4. Data model`);
+  if(state.database){
+    const db = findTech("databases", state.database);
+    L.push(`- Define all entities / tables for **${db ? db.name : "the database"}**.`);
+  } else {
+    L.push(`- Define all entities / tables for the database.`);
+  }
+  L.push(`- List fields, types and relationships.`);
+  L.push(`- Note any indexes or constraints that matter for performance.`);
+  L.push("");
+  L.push(`### 5. Implementation roadmap`);
+  L.push(`- Break the build into ordered, numbered steps (e.g. 1. Scaffold project, 2. Set up DB, …).`);
+  L.push(`- Each step should be small enough to implement and test independently.`);
+  L.push("");
+  L.push(`### 6. Risks & open decisions`);
+  L.push(`- Flag technical challenges or trade-offs I should be aware of.`);
+  L.push(`- List any decisions you need me to confirm before you start coding.`);
+  L.push("");
+  L.push(`---`);
+  L.push(`Once I review and approve the plan, I will ask you to proceed step by step.`);
+
+  return L.join("\n");
+}
+
+function renderPrompt(){ promptOutput.value = generatePrompt(); updateModeToggle(); }
+
+function updateModeToggle(){
+  const isplan = state.promptMode === "plan";
+  const dBtn = document.getElementById("modeDirectBtn");
+  const pBtn = document.getElementById("modePlanBtn");
+  const desc = document.getElementById("modeDesc");
+  dBtn.className = "mode-btn" + (!isplan ? " active-direct" : "");
+  pBtn.className = "mode-btn" + ( isplan ? " active-plan"   : "");
+  desc.textContent = isplan
+    ? "AI will analyse requirements and create a full plan before any code."
+    : "AI will scaffold and build the app directly from the prompt.";
+}
+
+/* ══════════════════════════════════════════════════
+   TECH TREE
+══════════════════════════════════════════════════ */
+/* Language groups for the tree (merge JS+TS, Java+Kotlin) */
+const WEB_LANG_GROUPS = [
+  { id:"jsts",  name:"JS / TS",      icon:"logos:javascript",  langs:["javascript","typescript"] },
+  { id:"py",    name:"Python",        icon:"logos:python",      langs:["python"] },
+  { id:"javak", name:"Java / Kotlin", icon:"logos:java",        langs:["java","kotlin"] },
+  { id:"cs",    name:"C#",            icon:"logos:c-sharp",     langs:["csharp"] },
+  { id:"go",    name:"Go",            icon:"logos:go",          langs:["go"] },
+  { id:"rust",  name:"Rust",          icon:"logos:rust",        langs:["rust"] },
+  { id:"php",   name:"PHP",           icon:"logos:php",         langs:["php"] },
+  { id:"ruby",  name:"Ruby",          icon:"logos:ruby",        langs:["ruby"] }
+];
+const DESKTOP_LANG_GROUPS = [
+  { id:"jsts",  name:"JS / TS",      icon:"logos:javascript",  langs:["javascript","typescript"] },
+  { id:"py",    name:"Python",        icon:"logos:python",      langs:["python"] },
+  { id:"cs",    name:"C#",            icon:"logos:c-sharp",     langs:["csharp"] },
+  { id:"rust",  name:"Rust",          icon:"logos:rust",        langs:["rust"] },
+  { id:"cpp",   name:"C++",           icon:"logos:c-plusplus",  langs:["cpp"] },
+  { id:"javak", name:"Java / Kotlin", icon:"logos:java",        langs:["java","kotlin"] },
+  { id:"dart",  name:"Dart",          icon:"logos:dart",        langs:["dart"] }
+];
+
+function uniqFwsForGroup(group, fwList){
+  const seen = new Set(); const out = [];
+  group.langs.forEach(lid =>
+    fwList.filter(fw => fw.languages.includes(lid))
+          .forEach(fw => { if(!seen.has(fw.id)){ seen.add(fw.id); out.push(fw); } })
+  );
+  return out;
+}
+
+let _treeEdges = [];
+
+function buildAndRenderTree(){
+  const treeInner = document.getElementById("treeInner");
+  treeInner.innerHTML = "";
+
+  const COL_W  = 190;  // node card width
+  const COL_G  = 72;   // horizontal gap between columns (where curves run)
+  const NODE_H = 42;   // node card height (px)
+  const ROW_H  = 52;   // vertical step per framework row
+  const PAD_X  = 36;
+  const PAD_Y  = 44;
+  const colX   = [0,1,2,3].map(c => PAD_X + c*(COL_W+COL_G));
+
+  const nodes  = [];
+  const edges  = [];
+  let   row    = 0;
+
+  function addLangBranch(langGroups, fwList, branchId, branchName, branchIcon){
+    const langNodes = [];
+    const branchStartRow = row;
+
+    langGroups.forEach(grp => {
+      const fws = uniqFwsForGroup(grp, fwList);
+      if(!fws.length) return;
+      const fwNodes = fws.map(fw => {
+        const n = { id:`${branchId}-${grp.id}-${fw.id}`, name:fw.name, icon:fw.icon,
+                    col:3, row, kind:"framework", branch:branchId, fullstack:!!fw.fullstack };
+        nodes.push(n); row++; return n;
+      });
+      const cr = (fwNodes[0].row + fwNodes[fwNodes.length-1].row) / 2;
+      const ln = { id:`${branchId}-l-${grp.id}`, name:grp.name, icon:grp.icon,
+                   col:2, row:cr, kind:"language", branch:branchId };
+      nodes.push(ln);
+      fwNodes.forEach(fn => edges.push({from:ln, to:fn, branch:branchId}));
+      langNodes.push(ln);
+      row += 0.6; // small gap between language groups
+    });
+    if(langNodes.length) row -= 0.6;
+
+    const cr = langNodes.length
+      ? (langNodes[0].row + langNodes[langNodes.length-1].row) / 2 : row;
+    const typeNode = { id:branchId, name:branchName, icon:branchIcon,
+                       col:1, row:cr, kind:"type", branch:branchId };
+    nodes.push(typeNode);
+    langNodes.forEach(ln => edges.push({from:typeNode, to:ln, branch:branchId}));
+    return {typeNode, endRow:row};
+  }
+
+  const {typeNode:webNode, endRow:webEnd} =
+    addLangBranch(WEB_LANG_GROUPS, TECH_DATA.backendFrameworks, "web", "Web", "ph:globe-bold");
+
+  row += 4; // gap between Web and Desktop
+
+  const {typeNode:desktopNode} =
+    addLangBranch(DESKTOP_LANG_GROUPS, TECH_DATA.desktopFrameworks, "desktop", "Desktop", "ph:desktop-bold");
+
+  const rootRow = (webNode.row + desktopNode.row) / 2;
+  const rootNode = { id:"root", name:"Vibe Stack", icon:"ph:stack-bold",
+                     col:0, row:rootRow, kind:"root", branch:"both" };
+  nodes.push(rootNode);
+  edges.push({from:rootNode, to:webNode,     branch:"web"});
+  edges.push({from:rootNode, to:desktopNode, branch:"desktop"});
+
+  _treeEdges = edges;
+
+  // Pixel positions
+  const totalRows = row + 1;
+  const TW = colX[3] + COL_W + PAD_X;
+  const TH = PAD_Y + totalRows * ROW_H + PAD_Y;
+
+  nodes.forEach(n => {
+    const nh = n.kind==="root" ? 52 : n.kind==="type" ? 46 : NODE_H;
+    n.nh = nh;
+    n.px = colX[n.col];
+    n.py = PAD_Y + n.row * ROW_H - (nh-NODE_H)/2;
+    n.cy = n.py + nh/2;
+  });
+
+  treeInner.style.cssText = `width:${TW}px;height:${TH}px;position:relative;`;
+
+  // SVG
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(SVG_NS,"svg");
+  svg.setAttribute("width",TW); svg.setAttribute("height",TH);
+  svg.style.cssText = "position:absolute;top:0;left:0;pointer-events:none;overflow:visible;";
+  treeInner.appendChild(svg);
+
+  // Draw edges
+  edges.forEach((edge, i) => {
+    const from = edge.from, to = edge.to;
+    const x1 = from.px + COL_W, y1 = from.cy;
+    const x2 = to.px,           y2 = to.cy;
+    const cp = (x2-x1)*0.44;
+
+    const path = document.createElementNS(SVG_NS,"path");
+    path.setAttribute("d",`M${x1},${y1} C${x1+cp},${y1} ${x2-cp},${y2} ${x2},${y2}`);
+    path.setAttribute("fill","none");
+    path.setAttribute("stroke", edge.branch==="web" ? "#8b5cf6" : "#22d3ee");
+    path.setAttribute("stroke-width","1.5");
+    path.setAttribute("opacity","0.28");
+    path.classList.add("tree-edge");
+    path.dataset.fromId = from.id;
+    path.dataset.toId   = to.id;
+    path.dataset.branch = edge.branch;
+    svg.appendChild(path);
+  });
+
+  // Draw nodes
+  const nodeMap = {};
+  nodes.forEach(n => {
+    nodeMap[n.id] = n;
+    const el = document.createElement("div");
+    el.className = `tree-node-el kind-${n.kind} branch-${n.branch}`;
+    el.dataset.nodeId = n.id;
+    el.style.cssText  = `left:${n.px}px;top:${n.py}px;width:${COL_W}px;height:${n.nh}px;`;
+
+    const iconSz = n.kind==="root" ? 24 : n.kind==="type" ? 20 : 17;
+    const fsTag  = n.fullstack ? `<span class="fs-pill" style="flex-shrink:0">full&shy;stack</span>` : "";
+    el.innerHTML = `<span class="iconify" data-icon="${n.icon}" style="font-size:${iconSz}px;flex-shrink:0"></span>
+      <span class="tn-name">${n.name}</span>${fsTag}`;
+
+    el.addEventListener("mouseenter", () => highlightPath(n.id));
+    el.addEventListener("mouseleave", clearHighlight);
+    el.addEventListener("mouseenter", e => showTip(
+      n.kind==="framework" ? (findTech("backendFrameworks",n.id.split("-").pop()) ||
+                               findTech("desktopFrameworks",n.id.split("-").pop()) || {description:""}).description
+                           : "", e));
+    el.addEventListener("mousemove",  moveTip);
+    el.addEventListener("mouseleave", hideTip);
+    treeInner.appendChild(el);
+  });
+
+  // Databases
+  const dbGrid = document.getElementById("treeDbGrid");
+  dbGrid.innerHTML = "";
+  TECH_DATA.databases.forEach(db => {
+    const card = document.createElement("div");
+    card.className = "tree-db-card";
+    card.innerHTML = `<span class="iconify" data-icon="${db.icon}"></span><span>${db.name}</span>`;
+    card.addEventListener("mouseenter", e => showTip(db.description, e));
+    card.addEventListener("mousemove",  moveTip);
+    card.addEventListener("mouseleave", hideTip);
+    dbGrid.appendChild(card);
+  });
+}
+
+function getRelatedIds(nodeId){
+  const rel = new Set([nodeId]);
+  function up(id)  { _treeEdges.filter(e=>e.to.id===id).forEach(e=>{rel.add(e.from.id);up(e.from.id);}); }
+  function down(id){ _treeEdges.filter(e=>e.from.id===id).forEach(e=>{rel.add(e.to.id);down(e.to.id);}); }
+  up(nodeId); down(nodeId);
+  return rel;
+}
+function highlightPath(nodeId){
+  const rel = getRelatedIds(nodeId);
+  document.querySelectorAll(".tree-node-el").forEach(el => {
+    const isRel = rel.has(el.dataset.nodeId);
+    el.classList.toggle("dimmed",    !isRel);
+    el.classList.toggle("highlighted", isRel);
+  });
+  document.querySelectorAll(".tree-edge").forEach(el => {
+    const isRel = rel.has(el.dataset.fromId) && rel.has(el.dataset.toId);
+    el.classList.toggle("edge-dim", !isRel);
+    el.classList.toggle("edge-hi",   isRel);
+  });
+}
+function clearHighlight(){
+  document.querySelectorAll(".tree-node-el").forEach(el => el.classList.remove("dimmed","highlighted"));
+  document.querySelectorAll(".tree-edge").forEach(el => el.classList.remove("edge-dim","edge-hi"));
+}
+
+/* ══════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════ */
+function showToast(msg, ok=true){
+  const toast = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  toast.style.borderColor = ok ? "var(--green)" : "var(--red)";
+  toast.querySelector(".iconify").setAttribute("data-icon", ok ? "ph:check-circle-bold" : "ph:warning-bold");
+  toast.querySelector(".iconify").style.color = ok ? "var(--green)" : "var(--red)";
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toast.classList.remove("show"), 2400);
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER ALL
+══════════════════════════════════════════════════ */
+function renderAll(){
+  const vis = visibleQuestions().map(q=>q.id);
+  if(!vis.includes(state.activeQuestion)) state.activeQuestion = vis[0];
+  renderQuestions(); renderPalette(); renderPrompt();
+}
+
+/* ══════════════════════════════════════════════════
+   EVENTS
+══════════════════════════════════════════════════ */
+sysDescInput.addEventListener("input", e => { state.description=e.target.value; renderPrompt(); });
+
+document.getElementById("modeDirectBtn").addEventListener("click", () => {
+  state.promptMode = "direct"; renderPrompt();
+});
+document.getElementById("modePlanBtn").addEventListener("click", () => {
+  state.promptMode = "plan"; renderPrompt();
+});
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(promptOutput.value); }
+  catch { promptOutput.select(); document.execCommand("copy"); }
+  showToast("Prompt copied to clipboard!");
+});
+document.getElementById("regenBtn").addEventListener("click", () => { renderPrompt(); showToast("Prompt regenerated"); });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  Object.keys(state).forEach(k => {
+    if(k==="description") state[k]="";
+    else if(k==="activeQuestion") state[k]="type";
+    else if(k==="promptMode") state[k]="direct";
+    else state[k]=null;
+  });
+  sysDescInput.value="";
+  renderAll();
+  showToast("Everything cleared");
+});
+
+/* ── Tab navigation ── */
+let treeBuilt = false;
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const view = btn.dataset.view;
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v => {
+      const match = v.id === "view-"+view;
+      v.hidden = !match;
+    });
+    if(view==="tree" && !treeBuilt){ buildAndRenderTree(); treeBuilt=true; }
+  });
+});
+
+/* ── Init ── */
+renderAll();
+</script>
+</body>
+</html>
