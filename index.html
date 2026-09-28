@@ -333,14 +333,6 @@ body{
 }
 .mode-btn .iconify{font-size:15px;}
 .mode-btn:hover{color:var(--text);}
-.mode-btn.active-plan{
-  background:linear-gradient(135deg,rgba(34,211,238,.15),rgba(34,211,238,.07));
-  color:var(--cyan);border:1px solid rgba(34,211,238,.35);
-}
-.mode-btn.active-direct{
-  background:linear-gradient(135deg,var(--p-lo),rgba(139,92,246,.07));
-  color:var(--purple);border:1px solid rgba(139,92,246,.4);
-}
 .mode-desc{font-size:11px;color:var(--faint);line-height:1.4;}
 .btn{
   background:var(--bg-4);border:1px solid var(--bdr-hi);color:var(--dim);
@@ -456,6 +448,44 @@ body{
 }
 .tree-db-card:hover{border-color:var(--bdr-hi);background:var(--bg-3);}
 .tree-db-card .iconify{font-size:22px;flex-shrink:0;}
+
+/* ─── FEATURE TOGGLES ────────────────────────────── */
+.feature-groups{display:flex;flex-direction:column;gap:10px;}
+.feature-group-label{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:6px;
+}
+.feature-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.feature-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--bg-1);border:1px solid var(--bdr);border-radius:var(--rxs);
+  padding:6px 10px;font-size:12px;font-weight:600;color:var(--dim);
+  cursor:pointer;transition:.15s;user-select:none;
+}
+.feature-chip .iconify{font-size:15px;}
+.feature-chip:hover{border-color:var(--bdr-hi);color:var(--text);}
+.feature-chip.on{
+  border-color:var(--purple);color:var(--text);
+  background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(34,211,238,.07));
+  box-shadow:0 0 10px -5px var(--p-glow);
+}
+
+/* ─── PROMPT MODE (generic active) + TOPIC ───────── */
+.mode-btn.active{
+  background:linear-gradient(135deg,var(--p-lo),rgba(34,211,238,.07));
+  color:var(--text);border:1px solid rgba(139,92,246,.4);
+}
+.prompt-topic-bar{
+  background:var(--bg-1);border-bottom:1px solid var(--bdr);
+  padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.prompt-topic-bar[hidden]{display:none;}
+.prompt-topic-bar input{
+  flex:1;min-width:220px;background:rgba(0,0,0,.3);border:1px solid var(--bdr);
+  border-radius:var(--rxs);color:var(--text);padding:8px 12px;font-size:13px;font-family:inherit;transition:.2s;
+}
+.prompt-topic-bar input::placeholder{color:var(--faint);}
+.prompt-topic-bar input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--p-lo);}
 </style>
 </head>
 <body>
@@ -542,15 +572,12 @@ body{
     </div>
     <div class="prompt-mode-bar">
       <span class="prompt-mode-label">Prompt mode</span>
-      <div class="prompt-mode-toggle">
-        <button class="mode-btn" id="modeDirectBtn" data-mode="direct">
-          <span class="iconify" data-icon="ph:rocket-launch-bold"></span> Build direct
-        </button>
-        <button class="mode-btn" id="modePlanBtn" data-mode="plan">
-          <span class="iconify" data-icon="ph:tree-structure-bold"></span> Plan first
-        </button>
-      </div>
+      <div class="prompt-mode-toggle" id="modeToggle"></div>
       <span class="mode-desc" id="modeDesc"></span>
+    </div>
+    <div class="prompt-topic-bar" id="topicBar" hidden>
+      <span class="prompt-mode-label" id="topicLabel">Topic</span>
+      <input type="text" id="promptTopic" autocomplete="off" />
     </div>
     <textarea class="prompt-output" id="promptOutput" spellcheck="false"></textarea>
   </div>
@@ -669,6 +696,99 @@ const TECH_DATA = {
 };
 
 /* ══════════════════════════════════════════════════
+   FEATURE OPTIONS (for the app being built)
+══════════════════════════════════════════════════ */
+const FEATURE_GROUPS = [
+  { id:"auth",     name:"Authentication & access" },
+  { id:"security", name:"Security" },
+  { id:"docs",     name:"Project docs" }
+];
+const FEATURE_OPTIONS = [
+  { id:"googleAuth", group:"auth", name:"Sign in with Google", icon:"logos:google-icon", auth:true,
+    description:"OAuth 2.0 / OpenID Connect login with Google accounts.",
+    lines:[
+      "Implement \"Sign in with Google\" using OAuth 2.0 / OpenID Connect (use a well-maintained auth library for the stack, not hand-rolled OAuth).",
+      "Store the Google account id (`sub`), email, name and avatar on the user record; link to an existing account by verified email.",
+      "Read the client id / secret and redirect URL from environment variables."
+    ]},
+  { id:"githubAuth", group:"auth", name:"Sign in with GitHub", icon:"logos:github-icon", auth:true,
+    description:"OAuth login with GitHub accounts.",
+    lines:[
+      "Implement \"Sign in with GitHub\" via OAuth using the stack's standard auth library.",
+      "Request only the scopes needed (e.g. `read:user`, `user:email`)."
+    ]},
+  { id:"emailAuth", group:"auth", name:"Email + password", icon:"ph:envelope-simple-bold", auth:true,
+    description:"Classic sign-up / sign-in with verification and password reset.",
+    lines:[
+      "Email + password sign-up and sign-in, with passwords hashed using Argon2id or bcrypt.",
+      "Email verification and a time-limited, single-use password-reset flow.",
+      "Lock out or throttle repeated failed logins."
+    ]},
+  { id:"magicLink", group:"auth", name:"Magic link", icon:"ph:magic-wand-bold", auth:true,
+    description:"Passwordless sign-in via a one-time link sent by email.",
+    lines:[
+      "Passwordless sign-in via single-use, short-lived magic links sent by email.",
+      "Tokens must be stored hashed and invalidated after use or expiry."
+    ]},
+  { id:"protectedPages", group:"auth", name:"Protected pages", icon:"ph:lock-key-bold", appliesTo:["web"],
+    description:"Server-side route guards — signed-out users are redirected to login.",
+    lines:[
+      "Split routes into public and protected; enforce protection on the **server** (middleware / route guards), not only by hiding UI.",
+      "Unauthenticated requests to protected pages redirect to the login page and return to the original URL after sign-in.",
+      "Protected API endpoints return 401 (not signed in) / 403 (not allowed).",
+      "Use secure, HttpOnly, SameSite session cookies (or short-lived tokens with refresh) and a logout that invalidates the session."
+    ]},
+  { id:"rbac", group:"auth", name:"Roles & permissions", icon:"ph:user-gear-bold",
+    description:"Role-based access control, e.g. admin / editor / viewer.",
+    lines:[
+      "Role-based access control with at least `admin`, `editor` and `viewer` roles.",
+      "Centralise permission checks in one module/helper and apply them on every server-side action, not just in the UI.",
+      "Provide an admin screen to manage user roles."
+    ]},
+  { id:"teams", group:"auth", name:"Teams & sharing", icon:"ph:users-three-bold",
+    description:"Workspaces users can invite others into, with per-workspace roles.",
+    lines:[
+      "Users can create workspaces (teams) and invite others by email; invites expire and are single-use.",
+      "Each membership has a role (owner / editor / viewer); all data is scoped to a workspace.",
+      "Every query must filter by the current workspace so one team can never read another team's data."
+    ]},
+  { id:"securityBaseline", group:"security", name:"Security hardening", icon:"ph:shield-check-bold",
+    description:"OWASP Top 10 baseline: validation, CSRF, headers, rate limits, secrets.",
+    lines:[
+      "Follow the OWASP Top 10: validate and sanitise all input on the server (schema validation), use parameterised queries / the ORM.",
+      "CSRF protection for cookie-based sessions; strict CORS; security headers (CSP, HSTS, X-Content-Type-Options, frame-ancestors).",
+      "Rate-limit auth and write endpoints.",
+      "Keep secrets in environment variables only; commit a `.env.example`, never real secrets.",
+      "Don't leak stack traces or internal errors to clients; log them server-side.",
+      "Add a dependency audit step (e.g. `npm audit` / `pip-audit`) to the scripts or CI."
+    ]},
+  { id:"auditLog", group:"security", name:"Audit log", icon:"ph:list-magnifying-glass-bold",
+    description:"Record who did what and when for sensitive actions.",
+    lines:[
+      "Record an audit event (actor, action, target, timestamp, IP) for sign-ins, permission changes and destructive actions.",
+      "Audit entries are append-only and viewable by admins."
+    ]},
+  { id:"docsDecisions", group:"docs", name:"Decision records", icon:"ph:scales-bold",
+    description:"docs/decisions/ — Architecture Decision Records (ADRs).",
+    lines:[
+      "Create `docs/decisions/` and record each significant technical choice as an ADR: `docs/decisions/NNNN-short-title.md` with Status, Context, Options considered, Decision, Consequences.",
+      "Start with ADRs for the choice of stack and (if applicable) the auth approach."
+    ]},
+  { id:"docsDiagrams", group:"docs", name:"Diagrams", icon:"ph:flow-arrow-bold",
+    description:"docs/diagrams/ — Mermaid architecture, sequence and ER diagrams.",
+    lines:[
+      "Create `docs/diagrams/` with Mermaid diagrams in Markdown: a system architecture diagram, an ER diagram of the data model, and sequence diagrams for key flows (e.g. sign-in).",
+      "Keep diagrams in sync with the code when the architecture changes."
+    ]},
+  { id:"docsFeatures", group:"docs", name:"Feature specs", icon:"ph:list-checks-bold",
+    description:"docs/features/ — one spec per feature with acceptance criteria.",
+    lines:[
+      "Create `docs/features/` with one Markdown spec per feature: summary, user stories, acceptance criteria, UI / API / data changes, and open questions.",
+      "Update the relevant spec when a feature's behaviour changes."
+    ]}
+];
+
+/* ══════════════════════════════════════════════════
    QUESTION DEFINITIONS
 ══════════════════════════════════════════════════ */
 const QUESTION_DEFS = [
@@ -677,7 +797,8 @@ const QUESTION_DEFS = [
   { id:"backend",  title:"Backend framework?",     kind:"drop", required:true,  category:"backendFrameworks",  showWhen:s=>s.type==="web" },
   { id:"frontend", title:"Frontend framework?",    kind:"drop", required:true,  category:"frontendFrameworks", showWhen:s=>s.type==="web" },
   { id:"desktop",  title:"Desktop framework?",     kind:"drop", required:true,  category:"desktopFrameworks",  showWhen:s=>s.type==="desktop" },
-  { id:"database", title:"Database?",              kind:"drop", required:true,  category:"databases" }
+  { id:"database", title:"Database?",              kind:"drop", required:true,  category:"databases" },
+  { id:"features", title:"Features & security?",   kind:"multi", required:false }
 ];
 
 /* ══════════════════════════════════════════════════
@@ -686,7 +807,7 @@ const QUESTION_DEFS = [
 const state = {
   type:null, language:null, backend:null, frontend:null,
   desktop:null, database:null, description:"", activeQuestion:"type",
-  promptMode:"direct"
+  promptMode:"direct", features:[], topic:""
 };
 
 /* ══════════════════════════════════════════════════
@@ -712,7 +833,13 @@ function visibleQuestions(){
 }
 function findTech(cat, id){ return (TECH_DATA[cat]||[]).find(t=>t.id===id); }
 function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
-function isDone(q){ return q.kind==="type" ? !!state.type : !!state[q.id]; }
+function isDone(q){
+  if(q.kind==="type")  return !!state.type;
+  if(q.kind==="multi") return state.features.length > 0;
+  return !!state[q.id];
+}
+function featureApplies(f){ return !f.appliesTo || !state.type || f.appliesTo.includes(state.type); }
+function selectedFeatures(){ return FEATURE_OPTIONS.filter(f => state.features.includes(f.id) && featureApplies(f)); }
 
 function filterItem(item, question){
   if(question.category==="languages")
@@ -764,8 +891,9 @@ function renderQuestions(){
 
     const body = document.createElement("div");
     body.className = "q-body";
-    if(q.kind==="type") body.appendChild(renderTypeChoices());
-    else                body.appendChild(renderDropZone(q));
+    if(q.kind==="type")       body.appendChild(renderTypeChoices());
+    else if(q.kind==="multi") body.appendChild(renderFeatureToggles());
+    else                      body.appendChild(renderDropZone(q));
     el.appendChild(body);
 
     el.addEventListener("click", () => { state.activeQuestion = q.id; renderQuestions(); renderPalette(); });
@@ -788,10 +916,43 @@ function renderTypeChoices(){
       state.type = t.id;
       if(t.id==="web")     state.desktop = null;
       if(t.id==="desktop"){ state.backend=null; state.frontend=null; }
+      state.features = state.features.filter(id => featureApplies(FEATURE_OPTIONS.find(f=>f.id===id)));
       state.activeQuestion = "language";
       renderAll();
     });
     wrap.appendChild(card);
+  });
+  return wrap;
+}
+
+function renderFeatureToggles(){
+  const wrap = document.createElement("div");
+  wrap.className = "feature-groups";
+  FEATURE_GROUPS.forEach(g => {
+    const opts = FEATURE_OPTIONS.filter(f => f.group===g.id && featureApplies(f));
+    if(!opts.length) return;
+    const grp = document.createElement("div");
+    grp.innerHTML = `<div class="feature-group-label">${g.name}</div>`;
+    const chips = document.createElement("div");
+    chips.className = "feature-chips";
+    opts.forEach(f => {
+      const on   = state.features.includes(f.id);
+      const chip = document.createElement("div");
+      chip.className = "feature-chip"+(on?" on":"");
+      chip.innerHTML = `<span class="iconify" data-icon="${on ? "ph:check-bold" : f.icon}"></span>${f.name}`;
+      chip.addEventListener("mouseenter", e => showTip(f.description, e));
+      chip.addEventListener("mousemove",  moveTip);
+      chip.addEventListener("mouseleave", hideTip);
+      chip.addEventListener("click", e => {
+        e.stopPropagation(); hideTip();
+        state.features = on ? state.features.filter(id=>id!==f.id) : [...state.features, f.id];
+        state.activeQuestion = "features";
+        renderAll();
+      });
+      chips.appendChild(chip);
+    });
+    grp.appendChild(chips);
+    wrap.appendChild(grp);
   });
   return wrap;
 }
@@ -853,6 +1014,14 @@ function renderPalette(){
     paletteGrid.innerHTML = `<div class="empty-state">
       <span class="iconify" data-icon="ph:cursor-click-bold"></span>
       Select the system type first.</div>`;
+    return;
+  }
+  if(active.kind==="multi"){
+    paletteFilter.innerHTML = `<span class="iconify" data-icon="ph:info-bold"></span>
+      Toggle features on the left — they're added to the generated prompt.`;
+    paletteGrid.innerHTML = `<div class="empty-state">
+      <span class="iconify" data-icon="ph:shield-check-bold"></span>
+      ${state.features.length ? selectedFeatures().length+" feature(s) selected." : "No extra features selected (optional)."}</div>`;
     return;
   }
 
@@ -919,9 +1088,54 @@ function buildStackLines(){
   return L;
 }
 
-function generatePrompt(){
-  return state.promptMode === "plan" ? generatePlanPrompt() : generateDirectPrompt();
+function buildFeatureSection(){
+  const feats = selectedFeatures();
+  if(!feats.length) return [];
+  const L = ["", `## Features & security`];
+  FEATURE_GROUPS.forEach(g => {
+    feats.filter(f => f.group===g.id).forEach(f => {
+      L.push(""); L.push(`### ${f.name}`);
+      f.lines.forEach(l => L.push(`- ${l}`));
+    });
+  });
+  return L;
 }
+function hasFeature(id){ return selectedFeatures().some(f => f.id===id); }
+function hasAuth(){ return selectedFeatures().some(f => f.auth); }
+
+/* Shared "what / stack / features" block used by the doc-style prompts */
+function pushProjectContext(L){
+  const desc = (state.description||"").trim();
+  L.push(`## Project context`);
+  L.push(desc || "_Describe your system here — what it does, who it's for, main features._");
+  L.push("");
+  L.push(`**System type:** ${state.type ? capitalize(state.type) : "_not chosen_"}`);
+  L.push("");
+  L.push(`### Tech stack`);
+  buildStackLines().forEach(s => L.push(s));
+  const feats = selectedFeatures();
+  if(feats.length){ L.push(""); L.push(`### Planned features`); feats.forEach(f => L.push(`- ${f.name}`)); }
+}
+function topicOr(placeholder){ return (state.topic||"").trim() || placeholder; }
+
+const PROMPT_MODES = [
+  { id:"direct",   label:"Build direct",    icon:"ph:rocket-launch-bold",  generate:()=>generateDirectPrompt(),
+    desc:"AI will scaffold and build the app directly from the prompt." },
+  { id:"plan",     label:"Plan first",      icon:"ph:tree-structure-bold", generate:()=>generatePlanPrompt(),
+    desc:"AI will analyse requirements and create a full plan before any code." },
+  { id:"decision", label:"Decision record", icon:"ph:scales-bold",         generate:()=>generateDecisionPrompt(), topic:true,
+    topicLabel:"Decision", placeholder:"e.g. Session cookies vs JWT for authentication",
+    desc:"AI will write an Architecture Decision Record (ADR) for one decision." },
+  { id:"diagram",  label:"Diagram",         icon:"ph:flow-arrow-bold",     generate:()=>generateDiagramPrompt(), topic:true,
+    topicLabel:"Diagram of", placeholder:"e.g. Sign-in with Google flow (leave empty for overall architecture)",
+    desc:"AI will produce Mermaid diagram(s) with a short explanation." },
+  { id:"feature",  label:"Feature spec",    icon:"ph:list-checks-bold",    generate:()=>generateFeaturePrompt(), topic:true,
+    topicLabel:"Feature", placeholder:"e.g. Invite teammates to a workspace",
+    desc:"AI will write a feature spec with user stories and acceptance criteria." }
+];
+function currentMode(){ return PROMPT_MODES.find(m => m.id===state.promptMode) || PROMPT_MODES[0]; }
+
+function generatePrompt(){ return currentMode().generate(); }
 
 function generateDirectPrompt(){
   const desc    = (state.description||"").trim();
@@ -941,6 +1155,8 @@ function generateDirectPrompt(){
     if(t){ L.push(""); L.push(`> **Note:** ${t.name} is used as a **fullstack** framework — handle both API and UI within the same project.`); }
   }
 
+  buildFeatureSection().forEach(s => L.push(s));
+
   L.push(""); L.push(`## Requirements`);
   L.push(`- Follow idiomatic best practices for the chosen stack.`);
   L.push(`- Produce a clean, well-structured project I can run locally.`);
@@ -951,10 +1167,18 @@ function generateDirectPrompt(){
   L.push(`- Include a README with architecture overview and run instructions.`);
 
   L.push(""); L.push(`## Deliverables`);
-  L.push(`1. Project scaffolding with all configuration files.`);
-  L.push(`2. Core features implemented end-to-end.`);
-  L.push(`3. Example data / seeds so the app is usable on first run.`);
-  L.push(`4. README with setup, run and deploy steps.`);
+  const D = [
+    `Project scaffolding with all configuration files.`,
+    `Core features implemented end-to-end.`,
+    `Example data / seeds so the app is usable on first run.`
+  ];
+  if(hasAuth()) D.push(`\`.env.example\` listing every auth setting (OAuth client ids/secrets, redirect URLs, session secret) plus a README section on creating the OAuth apps.`);
+  if(hasAuth() || hasFeature("protectedPages")) D.push(`Tests covering sign-in, sign-out and access to protected routes (signed-out, signed-in, wrong role).`);
+  const docs = ["docsDecisions","docsDiagrams","docsFeatures"].filter(hasFeature)
+    .map(id => ({docsDecisions:"`docs/decisions/`", docsDiagrams:"`docs/diagrams/`", docsFeatures:"`docs/features/`"})[id]);
+  if(docs.length) D.push(`${docs.join(", ")} created with initial content.`);
+  D.push(`README with setup, run and deploy steps.`);
+  D.forEach((d,i) => L.push(`${i+1}. ${d}`));
 
   return L.join("\n");
 }
@@ -976,6 +1200,8 @@ function generatePlanPrompt(){
     const t = findTech("backendFrameworks", state.backend);
     if(t){ L.push(""); L.push(`> **Note:** ${t.name} is used as a **fullstack** framework.`); }
   }
+
+  buildFeatureSection().forEach(s => L.push(s));
 
   L.push("");
   L.push(`## Your task — Plan only, do NOT write any code yet`);
@@ -1005,14 +1231,23 @@ function generatePlanPrompt(){
   }
   L.push(`- List fields, types and relationships.`);
   L.push(`- Note any indexes or constraints that matter for performance.`);
+  const ents = [];
+  if(hasAuth())            ents.push("users, accounts (linked OAuth providers), sessions");
+  if(hasFeature("rbac"))   ents.push("roles / permissions");
+  if(hasFeature("teams"))  ents.push("workspaces, memberships (with role), invites");
+  if(hasFeature("auditLog")) ents.push("audit_events");
+  if(ents.length) L.push(`- Include entities for the selected features: ${ents.join("; ")}.`);
   L.push("");
   L.push(`### 5. Implementation roadmap`);
   L.push(`- Break the build into ordered, numbered steps (e.g. 1. Scaffold project, 2. Set up DB, …).`);
   L.push(`- Each step should be small enough to implement and test independently.`);
+  if(hasAuth() || hasFeature("protectedPages")) L.push(`- Put authentication and route protection early, before building protected features on top.`);
   L.push("");
   L.push(`### 6. Risks & open decisions`);
   L.push(`- Flag technical challenges or trade-offs I should be aware of.`);
   L.push(`- List any decisions you need me to confirm before you start coding.`);
+  if(hasAuth()) L.push(`- Cover auth specifics: OAuth app setup and redirect URLs per environment, session vs token strategy, and secret storage.`);
+  if(hasFeature("teams")) L.push(`- Explain how you will guarantee tenant isolation between workspaces.`);
   L.push("");
   L.push(`---`);
   L.push(`Once I review and approve the plan, I will ask you to proceed step by step.`);
@@ -1020,18 +1255,96 @@ function generatePlanPrompt(){
   return L.join("\n");
 }
 
+function generateDecisionPrompt(){
+  const topic = topicOr("[describe the decision to be made]");
+  const L = [];
+  L.push(`# Decision record: ${topic}`);
+  L.push("");
+  pushProjectContext(L);
+  L.push("");
+  L.push(`## Your task`);
+  L.push(`Write an Architecture Decision Record (ADR) for: **${topic}**.`);
+  L.push("");
+  L.push(`Use this structure:`);
+  L.push(`1. **Title & status:** short title; status \`Proposed\`.`);
+  L.push(`2. **Context:** the problem, forces and constraints (take the stack and features above into account).`);
+  L.push(`3. **Options considered:** at least 2–3 realistic options, each with pros, cons, cost/complexity and security implications.`);
+  L.push(`4. **Decision:** the recommended option and why it wins for *this* project.`);
+  L.push(`5. **Consequences:** what becomes easier or harder, follow-up work, and what would make us revisit this.`);
+  L.push("");
+  L.push(`Save it as \`docs/decisions/NNNN-<short-slug>.md\` (next free number, 4 digits). Keep it to about one page.`);
+  L.push(`If key information is missing, list your assumptions at the top instead of guessing silently.`);
+  return L.join("\n");
+}
+
+function generateDiagramPrompt(){
+  const topic = topicOr("the overall system architecture");
+  const L = [];
+  L.push(`# Diagram: ${topic}`);
+  L.push("");
+  pushProjectContext(L);
+  L.push("");
+  L.push(`## Your task`);
+  L.push(`Create diagram(s) of **${topic}** using Mermaid inside Markdown.`);
+  L.push("");
+  L.push(`- Choose the right diagram type(s): \`flowchart\` for architecture/components, \`sequenceDiagram\` for request or auth flows, \`erDiagram\` for the data model, \`stateDiagram-v2\` for lifecycles.`);
+  L.push(`- Use the real component, service and table names for the stack above.`);
+  if(hasAuth() || hasFeature("protectedPages")) L.push(`- Show where authentication and authorization checks happen, and where trust boundaries are.`);
+  L.push(`- Keep each diagram readable (roughly 15 nodes or fewer); split into several diagrams if needed.`);
+  L.push(`- Under each diagram, add 3–6 bullets explaining the key flows or decisions.`);
+  L.push("");
+  L.push(`Save as \`docs/diagrams/<short-slug>.md\`. Make sure the Mermaid code renders on GitHub.`);
+  return L.join("\n");
+}
+
+function generateFeaturePrompt(){
+  const topic = topicOr("[describe the feature]");
+  const L = [];
+  L.push(`# Feature spec: ${topic}`);
+  L.push("");
+  pushProjectContext(L);
+  L.push("");
+  L.push(`## Your task`);
+  L.push(`Write a feature specification for: **${topic}**. Do not write code yet.`);
+  L.push("");
+  L.push(`Use this structure:`);
+  L.push(`1. **Summary:** what the feature does and why it matters (2–3 sentences).`);
+  L.push(`2. **User stories:** "As a <role>, I want … so that …".`);
+  L.push(`3. **Acceptance criteria:** testable Given / When / Then statements.`);
+  L.push(`4. **UI changes:** screens, components and states (empty, loading, error).`);
+  L.push(`5. **API changes:** endpoints / actions with inputs, outputs and error codes.`);
+  L.push(`6. **Data changes:** new or changed tables/fields and migrations.`);
+  L.push(`7. **Security & permissions:** who may do what; validation; abuse cases.`);
+  L.push(`8. **Edge cases & open questions.**`);
+  L.push(`9. **Test plan:** unit, integration and end-to-end tests to add.`);
+  L.push("");
+  L.push(`Save it as \`docs/features/<short-slug>.md\`.`);
+  return L.join("\n");
+}
+
 function renderPrompt(){ promptOutput.value = generatePrompt(); updateModeToggle(); }
 
+const modeToggle = document.getElementById("modeToggle");
+const topicBar   = document.getElementById("topicBar");
+const topicInput = document.getElementById("promptTopic");
+PROMPT_MODES.forEach(m => {
+  const btn = document.createElement("button");
+  btn.className = "mode-btn";
+  btn.dataset.mode = m.id;
+  btn.innerHTML = `<span class="iconify" data-icon="${m.icon}"></span> ${m.label}`;
+  btn.addEventListener("click", () => { state.promptMode = m.id; renderPrompt(); });
+  modeToggle.appendChild(btn);
+});
+
 function updateModeToggle(){
-  const isplan = state.promptMode === "plan";
-  const dBtn = document.getElementById("modeDirectBtn");
-  const pBtn = document.getElementById("modePlanBtn");
-  const desc = document.getElementById("modeDesc");
-  dBtn.className = "mode-btn" + (!isplan ? " active-direct" : "");
-  pBtn.className = "mode-btn" + ( isplan ? " active-plan"   : "");
-  desc.textContent = isplan
-    ? "AI will analyse requirements and create a full plan before any code."
-    : "AI will scaffold and build the app directly from the prompt.";
+  const mode = currentMode();
+  modeToggle.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode===mode.id));
+  document.getElementById("modeDesc").textContent = mode.desc;
+  topicBar.hidden = !mode.topic;
+  if(mode.topic){
+    document.getElementById("topicLabel").textContent = mode.topicLabel;
+    topicInput.placeholder = mode.placeholder;
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1267,12 +1580,7 @@ function renderAll(){
 ══════════════════════════════════════════════════ */
 sysDescInput.addEventListener("input", e => { state.description=e.target.value; renderPrompt(); });
 
-document.getElementById("modeDirectBtn").addEventListener("click", () => {
-  state.promptMode = "direct"; renderPrompt();
-});
-document.getElementById("modePlanBtn").addEventListener("click", () => {
-  state.promptMode = "plan"; renderPrompt();
-});
+topicInput.addEventListener("input", e => { state.topic=e.target.value; renderPrompt(); });
 
 document.getElementById("copyBtn").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(promptOutput.value); }
@@ -1282,12 +1590,13 @@ document.getElementById("copyBtn").addEventListener("click", async () => {
 document.getElementById("regenBtn").addEventListener("click", () => { renderPrompt(); showToast("Prompt regenerated"); });
 document.getElementById("resetBtn").addEventListener("click", () => {
   Object.keys(state).forEach(k => {
-    if(k==="description") state[k]="";
+    if(k==="description" || k==="topic") state[k]="";
     else if(k==="activeQuestion") state[k]="type";
     else if(k==="promptMode") state[k]="direct";
+    else if(k==="features") state[k]=[];
     else state[k]=null;
   });
-  sysDescInput.value="";
+  sysDescInput.value=""; topicInput.value="";
   renderAll();
   showToast("Everything cleared");
 });
